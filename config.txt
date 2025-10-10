@@ -1,0 +1,9 @@
+# DNS Proxy Server Configuration
+upstream_dns = 8.8.8.8
+upstream_port = 53
+listen_port = 5353
+response = NXDOMAIN
+fake_ip = 127.0.0.1
+
+# Blacklisted domains (comma separated)
+blacklist = example.com, badsite.com, malware.org, test.blocked
