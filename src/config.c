@@ -57,7 +57,7 @@ int load_config(const char *filename, Config *cfg) {
                 strncpy(cfg->response, val, MAX_STR_LEN - 1);
                 cfg->response[MAX_STR_LEN - 1] = '\0';
             } else {
-                fprintf(stderr, "⚠️  Unknown response mode '%s'. Using FAKE.\n", val);
+                fprintf(stderr, "Unknown response mode '%s'. Using FAKE.\n", val);
                 strcpy(cfg->response, "FAKE");
             }
         } else if (strcmp(key, "fake_ip") == 0) {
