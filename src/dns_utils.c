@@ -58,38 +58,35 @@ int build_fake_a_response(const unsigned char *req, int req_len, unsigned char *
                          int resp_cap, const char *fake_ip, int ttl) {
     if (req_len < 12) return -1;
     
-    // Копируем весь заголовок запроса
+
     memcpy(resp, req, 12);
     
-    // Устанавливаем флаги ответа: QR=1, AA=1, RA=1
-    unsigned char flags2 = 0x84 | (req[2] & 0x01); // QR=1(0x80), AA=1(0x04), RD как в запросе
-    unsigned char flags3 = 0x80; // RA=1
+    unsigned char flags2 = 0x84 | (req[2] & 0x01);
+    unsigned char flags3 = 0x80; 
     
     resp[2] = flags2;
     resp[3] = flags3;
 
-    // QDCOUNT = 1 (как в запросе)
-    // ANCOUNT = 1
+
     resp[6] = 0x00;
     resp[7] = 0x01;
-    // NSCOUNT = 0
+
     resp[8] = 0x00;
     resp[9] = 0x00;
-    // ARCOUNT = 0  
+
     resp[10] = 0x00;
     resp[11] = 0x00;
 
-    // Копируем секцию вопроса
+
     int qd_len = 0;
     int i = 12;
-    
-    // Ищем конец QNAME (заканчивается нулевым байтом)
+
     while (i < req_len && req[i] != 0) {
         i++;
     }
     if (i >= req_len - 4) return -1;
+
     
-    // Длина секции вопроса: QNAME + null-byte + TYPE + CLASS
     qd_len = (i - 12) + 1 + 4;
     
     if (12 + qd_len > resp_cap) return -1;
@@ -97,10 +94,9 @@ int build_fake_a_response(const unsigned char *req, int req_len, unsigned char *
 
     int offset = 12 + qd_len;
 
-    // Секция ответа
     if (offset + 16 > resp_cap) return -1;
     
-    // NAME - указатель на имя в секции вопроса (0xC00C)
+
     resp[offset++] = 0xC0;
     resp[offset++] = 0x0C;
 
@@ -121,7 +117,7 @@ int build_fake_a_response(const unsigned char *req, int req_len, unsigned char *
     resp[offset++] = 0x00;
     resp[offset++] = 0x04;
 
-    // RDATA: IPv4 адрес
+    // RDATA: IPv4
     struct in_addr addr;
     if (inet_pton(AF_INET, fake_ip, &addr) != 1) return -1;
     memcpy(resp + offset, &addr.s_addr, 4);
@@ -132,11 +128,10 @@ int build_fake_a_response(const unsigned char *req, int req_len, unsigned char *
 
 int build_nxdomain_response(const unsigned char *req, int req_len, unsigned char *resp, int resp_cap) {
     if (req_len < 12) return -1;
-    
-    // Копируем ID и часть заголовка
+
     memcpy(resp, req, 2); // ID
     
-    // Устанавливаем флаги: QR=1, Opcode, AA=0, TC=0, RD=1, RA=1, RCODE=3
+
     resp[2] = 0x81; // QR=1, RD=1
     resp[3] = 0x83; // RA=1, RCODE=3
     
@@ -149,7 +144,7 @@ int build_nxdomain_response(const unsigned char *req, int req_len, unsigned char
     resp[8] = resp[9] = 0x00; // NSCOUNT  
     resp[10] = resp[11] = 0x00; // ARCOUNT
     
-    // Копируем секцию вопроса
+
     int i = 12;
     while (i < req_len && req[i] != 0) i++;
     if (i >= req_len - 4) return -1;
@@ -159,16 +154,15 @@ int build_nxdomain_response(const unsigned char *req, int req_len, unsigned char
     
     memcpy(resp + 12, req + 12, qd_len);
     
-    return 12 + qd_len; // Только заголовок + вопрос
+    return 12 + qd_len;
 }
 
 int build_refused_response(const unsigned char *req, int req_len, unsigned char *resp, int resp_cap) {
     if (req_len < 12) return -1;
     
-    // Копируем ID и часть заголовка
     memcpy(resp, req, 2); // ID
     
-    // Устанавливаем флаги: QR=1, Opcode, AA=0, TC=0, RD=1, RA=1, RCODE=5
+
     resp[2] = 0x81; // QR=1, RD=1
     resp[3] = 0x85; // RA=1, RCODE=5
     
@@ -181,7 +175,7 @@ int build_refused_response(const unsigned char *req, int req_len, unsigned char 
     resp[8] = resp[9] = 0x00; // NSCOUNT
     resp[10] = resp[11] = 0x00; // ARCOUNT
     
-    // Копируем секцию вопроса
+
     int i = 12;
     while (i < req_len && req[i] != 0) i++;
     if (i >= req_len - 4) return -1;
@@ -191,7 +185,7 @@ int build_refused_response(const unsigned char *req, int req_len, unsigned char 
     
     memcpy(resp + 12, req + 12, qd_len);
     
-    return 12 + qd_len; // Только заголовок + вопрос
+    return 12 + qd_len;
 }
 
 void forward_to_upstream(int sock, unsigned char *buffer, int len, 
