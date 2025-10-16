@@ -1,12 +1,10 @@
 /**
  * @file config.c
- * @brief Реалізація завантаження конфігурації DNS-проксі сервера.
+ * @brief Implementation of configuration file parsing for the DNS proxy server.
  *
- * Цей модуль відповідає за:
- * - Зчитування параметрів із текстового конфігураційного файлу.
- * - Парсинг ключів виду `key=value`.
- * - Заповнення структури Config.
- * - Встановлення значень за замовчуванням у разі відсутності параметрів.
+ * This module provides functions for loading and parsing the configuration
+ * file that defines DNS proxy parameters such as the upstream DNS server,
+ * blacklist, fake IP, response type, and listening port.
  */
 
 #include "config.h"
@@ -16,12 +14,12 @@
 #include <ctype.h>
 
 /**
- * @brief Видаляє пробіли з початку і кінця рядка.
+ * @brief Trims leading and trailing whitespace characters from a string.
  *
- * Функція модифікує рядок **на місці**, видаляючи всі пробіли, табуляції
- * та символи нового рядка з обох кінців.
+ * This function modifies the input string in place, removing spaces, tabs,
+ * and newline characters from both ends.
  *
- * @param s Вказівник на змінюваний рядок.
+ * @param s Pointer to the string to be trimmed. Must be writable.
  */
 static void trim(char *s) {
     char *end = s + strlen(s) - 1;
@@ -36,29 +34,25 @@ static void trim(char *s) {
 }
 
 /**
- * @brief Завантажує конфігурацію з файлу у структуру Config.
+ * @brief Loads DNS proxy configuration from a text file.
  *
- * Підтримуються такі ключі у файлі:
- * - `upstream_dns` — IP адреса апстрім DNS сервера (рядок).
- * - `upstream_port` — порт апстрім DNS сервера (число).
- * - `response` — режим відповіді для заблокованих доменів (`FAKE`, `NXDOMAIN`, `REFUSED`).
- * - `fake_ip` — IP адреса, яку буде повертати FAKE-відповідь.
- * - `listen_port` — порт, на якому слухає локальний DNS-проксі.
- * - `blacklist` — список доменів через кому.
+ * This function reads key-value pairs from a configuration file and fills
+ * a `Config` structure with corresponding values. Supported keys include:
  *
- * Усі ключі нечутливі до пробілів. Рядки, що починаються з `#`, ігноруються.
+ * - `upstream_dns`: IP address of the upstream DNS server.
+ * - `upstream_port`: Port of the upstream DNS server (default: 53).
+ * - `response`: Type of DNS response for blacklisted domains.
+ *   Possible values: `FAKE`, `NXDOMAIN`, `REFUSED`.
+ * - `fake_ip`: IP address to use in fake responses (default: 127.0.0.1).
+ * - `listen_port`: Port where the proxy listens for DNS queries (default: 5353).
+ * - `blacklist`: Comma-separated list of domain names to block.
  *
- * Якщо певний параметр відсутній — використовується значення за замовчуванням:
- * - `upstream_dns = 8.8.8.8`
- * - `upstream_port = 53`
- * - `response = FAKE`
- * - `fake_ip = 127.0.0.1`
- * - `listen_port = 5353`
- * - `blacklist_count = 0`
+ * Lines starting with `#` are treated as comments.
+ * Whitespace is automatically trimmed from keys and values.
  *
- * @param filename Шлях до конфігураційного файлу.
- * @param cfg Вказівник на структуру, яку буде заповнено параметрами.
- * @return 0 при успіху, -1 якщо файл не вдалося відкрити.
+ * @param filename Path to the configuration file to load.
+ * @param cfg Pointer to the `Config` structure to populate.
+ * @return 0 on success, or -1 if the file cannot be opened.
  */
 int load_config(const char *filename, Config *cfg) {
     FILE *f = fopen(filename, "r");
