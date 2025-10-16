@@ -19,4 +19,13 @@ clean:
 install: $(TARGET)
 	cp $(TARGET) /usr/local/bin/
 
-.PHONY: all clean install
+.PHONY: all clean install test
+
+TEST_TARGET = test_dns_utils
+TEST_SOURCES = test/test_dns_utils.c src/dns_utils.c src/config.c
+TEST_FLAGS = -Iinclude -Wall -Wextra -std=c99
+
+test: $(TEST_SOURCES)
+	$(CC) $(TEST_FLAGS) -o $(TEST_TARGET) $(TEST_SOURCES)
+	./$(TEST_TARGET)
+
